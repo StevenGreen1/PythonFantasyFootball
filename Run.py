@@ -67,25 +67,29 @@ def get_team_info():
 def main():
     r = requests.get(url)
     json_obj = r.json()
-
-    elements_df = pd.DataFrame(json_obj['elements'])
-    elements_df = elements_df.sort_values(by='total_points', ascending=False).head(10)
+    full_elements_df = pd.DataFrame(json_obj['elements'])
 
     printDifficulties()
+    fig, axs = plt.subplots(4)
+    fig.suptitle('Running Average Player Form')
 
-    for iter, row in elements_df.iterrows():
-        name = row['second_name']
-        scores = get_gameweek_history(row['id'])['total_points'].to_list()
-        gwk = get_gameweek_history(row['id'])['round'].to_list()
-        moving_avg = movingaverage(scores, 3)
-#        plt.plot(gwk, scores, label = name)
-        plt.plot(gwk[1:-1], moving_avg, '--', label = name)
-#        print("{} -> Avg {}".format(scores, moving_avg))
+    for element_type in range(1,5):
+        elements_df = full_elements_df[full_elements_df.element_type == element_type]
+        elements_df = elements_df.sort_values(by='total_points', ascending=False).head(3)
 
-    plt.legend(loc="upper left")
-    plt.title('Running Average Player Form')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Running Average Points Scores')
+        for iter, row in elements_df.iterrows():
+            name = row['second_name']
+            scores = get_gameweek_history(row['id'])['total_points'].to_list()
+            gwk = get_gameweek_history(row['id'])['round'].to_list()
+            moving_avg = movingaverage(scores, 3)
+#           plt.plot(gwk, scores, label = name)
+            axs[element_type - 1].plot(gwk[1:-1], moving_avg, '--', label = name)
+#           print("{} -> Avg {}".format(scores, moving_avg))
+
+        axs[element_type - 1].legend(loc="upper left")
+        axs[element_type - 1].set_title('Running Average Player Form')
+#    plt.xlabel('Gameweek')
+#    plt.ylabel('Running Average Points Scores')
     plt.show()
 
 #=====================================
@@ -102,7 +106,13 @@ def printDifficulties():
     id_to_name = team_df.set_index('id')['name'].to_dict()
  
     x = PrettyTable()
-    x.field_names = ["Team", "Difficult", "Difficult 5", "Difficulty 10"]
+    names = ["Team", "Remaining Difficulty"]
+
+    lookahead = [3, 5, 10]
+    for number in lookahead:
+        names.append("Difficulty Next {}".format(number))
+
+    x.field_names = names
  
     for id in id_to_name.keys():
         name = id_to_name[id]
@@ -110,8 +120,10 @@ def printDifficulties():
         fixtures_df['is_home_team'] = np.where(fixtures_df.team_h == id, True, False)
         fixtures_df['difficulty'] = np.where(fixtures_df.is_home_team == True, fixtures_df.team_h_difficulty, fixtures_df.team_a_difficulty)
         fixtures_df.sort_values(by=['event'])
- 
-        x.add_row([name, fixtures_df.difficulty.mean(), fixtures_df.head(5).difficulty.mean(), fixtures_df.head(10).difficulty.mean()])
+        row = [name, round(fixtures_df.difficulty.mean(), 2)]
+        for number in lookahead:
+            row.append(round(fixtures_df.head(number).difficulty.mean(), 2))
+        x.add_row(row)
     print(x)
 
 #=====================================
