@@ -69,10 +69,12 @@ def displayTopPlayers():
             axs[row, col].plot(gwk[1:-1], moving_avg, '-', label = name)
 
         axs[row, col].legend(loc="upper left")
-        axs[row, col].set_title('Running Average Player Form')
+#        axs[row, col].set_title('Running Average Player Form')
         axs[row, col].set_xlabel('Gameweek')
         axs[row, col].set_ylabel('Running Ava. Points')
-    plt.show()
+    plt.tight_layout()
+    plt.savefig('Plot.pdf')
+    #plt.show()
 
 #=====================================
 
