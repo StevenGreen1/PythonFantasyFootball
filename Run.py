@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
+from pandas.api.types import is_string_dtype
+from pandas.api.types import is_numeric_dtype
 
 base_url = 'https://fantasy.premierleague.com/api/'
 
@@ -13,12 +15,7 @@ base_url = 'https://fantasy.premierleague.com/api/'
 
 def get_player_history(player_id, elements = 'history'):
     '''get all gameweek info for a given player_id'''
-
-    # send GET request to
-    # https://fantasy.premierleague.com/api/element-summary/{PID}/
     r = requests.get(base_url + 'element-summary/' + str(player_id) + '/').json()
-
-    # extract the elements data from response into dataframe
     df = pd.json_normalize(r[elements])
     return df
 
@@ -26,9 +23,6 @@ def get_player_history(player_id, elements = 'history'):
 
 def get_fixture_data():
     '''get all gameweek info for a given player_id'''
-
-    # send GET request to
-    # https://fantasy.premierleague.com/api/fixtures/
     r = requests.get(base_url + 'fixtures/').json()
     df = pd.json_normalize(r)
     return df
@@ -40,10 +34,7 @@ def get_fixture_data():
 
 def get_global_info(elements = 'teams'):
     '''get all team data'''
-
-    # send GET request to
-    # https://fantasy.premierleague.com/api/bootstrap-static/
-    r = requests.get('https://fantasy.premierleague.com/api/bootstrap-static/').json()
+    r = requests.get(base_url + 'bootstrap-static/').json()
     df = pd.json_normalize(r[elements])
     return df
 
@@ -51,6 +42,7 @@ def get_global_info(elements = 'teams'):
 
 def displayTopPlayers():
     full_elements_df = get_global_info('elements')
+    full_elements_df = full_elements_df.astype({"form": float, "total_points": int})
     fig, axs = plt.subplots(2,2)
     fig.suptitle('Player Form')
 
@@ -59,7 +51,7 @@ def displayTopPlayers():
         row = idx % 2
         col = math.floor(idx/2)
         elements_df = full_elements_df[full_elements_df.element_type == element_type]
-        elements_df = elements_df.sort_values(by='total_points', ascending=False).head(3)
+        elements_df = elements_df.sort_values(by='form', ascending=False).head(3)
 
         for idx, element in elements_df.iterrows():
             name = element['second_name']
@@ -69,12 +61,10 @@ def displayTopPlayers():
             axs[row, col].plot(gwk[1:-1], moving_avg, '-', label = name)
 
         axs[row, col].legend(loc="upper left")
-#        axs[row, col].set_title('Running Average Player Form')
         axs[row, col].set_xlabel('Gameweek')
         axs[row, col].set_ylabel('Running Ava. Points')
     plt.tight_layout()
     plt.savefig('Plot.pdf')
-    #plt.show()
 
 #=====================================
 
@@ -98,8 +88,7 @@ def printDifficulties():
 
     x.field_names = names
 
-    for id in id_to_name.keys():
-        name = id_to_name[id]
+    for id, name in id_to_name.items():
         fixtures_df = all_fixtures_df[((all_fixtures_df.team_h == id) | (all_fixtures_df.team_a == id)) & (all_fixtures_df.finished == False)]
         fixtures_df['is_home_team'] = np.where(fixtures_df.team_h == id, True, False)
         fixtures_df['difficulty'] = np.where(fixtures_df.is_home_team == True, fixtures_df.team_h_difficulty, fixtures_df.team_a_difficulty)
