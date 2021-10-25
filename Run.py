@@ -98,6 +98,7 @@ def printDifficulties():
             row.append(round(fixtures_df.head(number).difficulty.mean(), 2))
         x.add_row(row)
     print(x)
+#    print(x.get_html_string())
 
 #=====================================
 
