@@ -64,7 +64,7 @@ def displayTopPlayers():
         axs[row, col].set_xlabel('Gameweek')
         axs[row, col].set_ylabel('Running Ava. Points')
     plt.tight_layout()
-    plt.savefig('Plot.pdf')
+    plt.savefig('Plot.png')
 
 #=====================================
 
