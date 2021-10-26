@@ -49,8 +49,8 @@ jobs:
         run: git add .
       - name: commit changed files
         run: git commit -m "Auto updating Plot.png"
-      - name: fetch from main
-        run: git fetch origin main
-      - name: push code to main
-        run: git push origin HEAD:main
-
+      - name: push changes # push the output folder to your repo
+        uses: ad-m/github-push-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
