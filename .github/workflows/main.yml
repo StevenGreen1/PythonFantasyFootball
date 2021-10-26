@@ -50,7 +50,7 @@ jobs:
       - name: commit changed files
         run: |
           git config --local user.name "StevenGreen1"
-          git commit -m "Auto updating Plot.png"
+          git commit -m "Auto updating Plot.png" --allow-empty
       - name: push changes # push the output folder to your repo
         uses: ad-m/github-push-action@master
         with:
