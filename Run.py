@@ -98,6 +98,14 @@ def printDifficulties():
             row.append(round(fixtures_df.head(number).difficulty.mean(), 2))
         x.add_row(row)
     print(x)
+
+    with open('tpl_index.html', 'r') as file :
+        filedata = file.read()
+
+    filedata = filedata.replace('HTML_TABLE', x.get_html_string())
+
+    with open('index.html', 'w') as file:
+        file.write(filedata)
 #    print(x.get_html_string())
 
 #=====================================
