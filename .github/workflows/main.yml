@@ -36,6 +36,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
           pip install numpy
+          pip install pandas
           python -m pip install -U prettytable 
 
       # Runs a single command using the runners shell
