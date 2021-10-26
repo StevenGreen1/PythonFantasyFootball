@@ -43,8 +43,6 @@ jobs:
       # Runs a single command using the runners shell
       - name: Run a one-line script
         run: python3 ./Run.py
-      - name: switching from HTTPS to SSH
-        run: git remote set-url origin ${{ secrets.ssh }}
       - name: check for changes
         run: git status
       - name: stage changed files
