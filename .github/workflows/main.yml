@@ -26,10 +26,15 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with: 
+        # Semantic version range syntax or exact version of a Python version
+        python-version: '3.x'
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: python ./Run.py
+        run: python3 ./Run.py
       - name: switching from HTTPS to SSH
         run: git remote set-url origin ${{ secrets.ssh }}
       - name: check for changes
