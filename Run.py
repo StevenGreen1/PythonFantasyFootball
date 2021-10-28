@@ -80,11 +80,12 @@ def printDifficulties():
     id_to_name = team_df.set_index('id')['name'].to_dict()
 
     x = PrettyTable()
-    names = ["Team", "Remaining Difficulty"]
+    names = ["Team"]
 
     lookahead = [3, 5, 10]
     for number in lookahead:
         names.append("Difficulty Next {}".format(number))
+    names.append("Remaining Difficulty")
 
     x.field_names = names
 
@@ -93,9 +94,10 @@ def printDifficulties():
         fixtures_df['is_home_team'] = np.where(fixtures_df.team_h == id, True, False)
         fixtures_df['difficulty'] = np.where(fixtures_df.is_home_team == True, fixtures_df.team_h_difficulty, fixtures_df.team_a_difficulty)
         fixtures_df.sort_values(by=['event'])
-        row = [name, round(fixtures_df.difficulty.mean(), 2)]
+        row = [name]
         for number in lookahead:
             row.append(round(fixtures_df.head(number).difficulty.mean(), 2))
+        row.append(round(fixtures_df.difficulty.mean(), 2))
         x.add_row(row)
     print(x)
 
@@ -103,6 +105,7 @@ def printDifficulties():
         filedata = file.read()
 
     filedata = filedata.replace('HTML_TABLE', x.get_html_string())
+    filedata = filedata.replace('<table>', '<table class="styled-table">')
 
     with open('index.html', 'w') as file:
         file.write(filedata)
