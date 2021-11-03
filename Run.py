@@ -6,6 +6,8 @@ from prettytable import PrettyTable
 from pandas.api.types import is_string_dtype
 from pandas.api.types import is_numeric_dtype
 
+from MiniLeagues import *
+
 base_url = 'https://fantasy.premierleague.com/api/'
 
 #=====================================
@@ -114,6 +116,15 @@ def printDifficulties():
 #=====================================
 
 def main():
+#    df = getMiniLeague()
+#    table = PrettyTable()
+#    table.field_names = ["Name", "Benched Points"]
+
+#    for index, row in df.iterrows():
+#        table.add_row([row['player_name'], getBenchedPoints(row['entry'])])
+
+#    print(table.get_html_string(sortby="Benched Points", reversesort=True))
+
     printDifficulties()
     displayTopPlayers()
 
