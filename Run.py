@@ -103,7 +103,6 @@ def printDifficulties():
             row.append(round(fixtures_df.head(number).difficulty.mean(), 2))
         row.append(round(fixtures_df.difficulty.mean(), 2))
         x.add_row(row)
-    print(x)
 
     with open('tpl_index.html', 'r') as file :
         filedata = file.read()
@@ -136,12 +135,11 @@ def showBenchedPoints(mini_league_code):
 def main():
     logging.basicConfig(level=logging.INFO)
 
-    mini_league_code = 1
-
+#    mini_league_code = 1
 #    examine606()
-    showBenchedPoints(mini_league_code)
-#    printDifficulties()
-#    displayTopPlayers()
+#    showBenchedPoints(mini_league_code)
+    printDifficulties()
+    displayTopPlayers()
 
 #=====================================
 
