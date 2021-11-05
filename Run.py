@@ -1,14 +1,17 @@
-import requests, json, sys, math
+import math
+import sys
+import logging
+
+import requests
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
-from pandas.api.types import is_string_dtype
-from pandas.api.types import is_numeric_dtype
 
 from MiniLeagues import *
+from SixZeroSixCode import *
 
-base_url = 'https://fantasy.premierleague.com/api/'
+BASE_URL = 'https://fantasy.premierleague.com/api/'
 
 #=====================================
 # element options for an individual players:
@@ -17,17 +20,15 @@ base_url = 'https://fantasy.premierleague.com/api/'
 
 def get_player_history(player_id, elements = 'history'):
     '''get all gameweek info for a given player_id'''
-    r = requests.get(base_url + 'element-summary/' + str(player_id) + '/').json()
-    df = pd.json_normalize(r[elements])
-    return df
+    req_json = requests.get(BASE_URL + 'element-summary/' + str(player_id) + '/').json()
+    return pd.json_normalize(req_json[elements])
 
 #=====================================
 
 def get_fixture_data():
     '''get all gameweek info for a given player_id'''
-    r = requests.get(base_url + 'fixtures/').json()
-    df = pd.json_normalize(r)
-    return df
+    req_json = requests.get(BASE_URL + 'fixtures/').json()
+    return pd.json_normalize(req_json)
 
 #=====================================
 # element options for global data:
@@ -36,9 +37,8 @@ def get_fixture_data():
 
 def get_global_info(elements = 'teams'):
     '''get all team data'''
-    r = requests.get(base_url + 'bootstrap-static/').json()
-    df = pd.json_normalize(r[elements])
-    return df
+    req_json = requests.get(BASE_URL + 'bootstrap-static/').json()
+    return pd.json_normalize(req_json[elements])
 
 #=====================================
 
@@ -55,7 +55,7 @@ def displayTopPlayers():
         elements_df = full_elements_df[full_elements_df.element_type == element_type]
         elements_df = elements_df.sort_values(by='form', ascending=False).head(3)
 
-        for idx, element in elements_df.iterrows():
+        for unused_idx, element in elements_df.iterrows():
             name = element['second_name']
             scores = get_player_history(element['id'])['total_points'].to_list()
             gwk = get_player_history(element['id'])['round'].to_list()
@@ -92,9 +92,11 @@ def printDifficulties():
     x.field_names = names
 
     for id, name in id_to_name.items():
-        fixtures_df = all_fixtures_df[((all_fixtures_df.team_h == id) | (all_fixtures_df.team_a == id)) & (all_fixtures_df.finished == False)]
+        fixtures_df = all_fixtures_df[((all_fixtures_df.team_h == id) | 
+            (all_fixtures_df.team_a == id)) & (all_fixtures_df.finished == False)]
         fixtures_df['is_home_team'] = np.where(fixtures_df.team_h == id, True, False)
-        fixtures_df['difficulty'] = np.where(fixtures_df.is_home_team == True, fixtures_df.team_h_difficulty, fixtures_df.team_a_difficulty)
+        fixtures_df['difficulty'] = np.where(fixtures_df.is_home_team == True,
+                fixtures_df.team_h_difficulty, fixtures_df.team_a_difficulty)
         fixtures_df.sort_values(by=['event'])
         row = [name]
         for number in lookahead:
@@ -115,18 +117,31 @@ def printDifficulties():
 
 #=====================================
 
+def showBenchedPoints(mini_league_code):
+    mini_league_list, names, teams = getMiniLeague(mini_league_code)
+
+    table = PrettyTable()
+    table.field_names = ["Name", "Team", "Benched Points", "Cost of Transfers", "Transfers", "Entry Number"]
+
+    for idx, row in enumerate(mini_league_list):
+        if idx % 100 == 0:
+            logging.info('Processing player count {}'.format(idx))
+        points, cost, transfers = getBenchedPoints(row)
+        table.add_row(["Dummy", teams[idx], points, cost, transfers, row])
+
+    print(table.get_string(sortby="Benched Points", reversesort=True))
+
+#=====================================
+
 def main():
-#    df = getMiniLeague()
-#    table = PrettyTable()
-#    table.field_names = ["Name", "Benched Points"]
+    logging.basicConfig(level=logging.INFO)
 
-#    for index, row in df.iterrows():
-#        table.add_row([row['player_name'], getBenchedPoints(row['entry'])])
+    mini_league_code = 1
 
-#    print(table.get_html_string(sortby="Benched Points", reversesort=True))
-
-    printDifficulties()
-    displayTopPlayers()
+#    examine606()
+    showBenchedPoints(mini_league_code)
+#    printDifficulties()
+#    displayTopPlayers()
 
 #=====================================
 
