@@ -76,6 +76,43 @@ def movingaverage(interval, window_size):
 
 #=====================================
 
+def printTeamForm():
+    all_fixtures_df = get_fixture_data()
+    all_fixtures_df = all_fixtures_df[all_fixtures_df.finished == True]
+    all_fixtures_df = all_fixtures_df.astype({"team_h_score": int, "team_a_score": int})
+
+    team_df = get_global_info('teams')
+    id_to_name = team_df.set_index('id')['name'].to_dict()
+
+    x = PrettyTable()
+    names = ["Team", "Points Per Game [5]", "Goals Per Game [5]", "Points Per Game Overall"]
+    x.field_names = names
+
+    for id, name in id_to_name.items():
+        fixtures_df = all_fixtures_df[((all_fixtures_df.team_h == id) |
+            (all_fixtures_df.team_a == id))]
+        fixtures_df['is_home_team'] = np.where(fixtures_df.team_h == id, True, False)
+        fixtures_df['team_goals'] = np.where(fixtures_df.is_home_team == True,
+                fixtures_df.team_h_score , fixtures_df.team_a_score)
+        fixtures_df['opp_goals'] = np.where(fixtures_df.is_home_team == False,
+                fixtures_df.team_h_score , fixtures_df.team_a_score)
+        fixtures_df['points'] = np.where(fixtures_df.team_goals > fixtures_df.opp_goals, 3, np.where(fixtures_df.team_goals == fixtures_df.opp_goals, 1, 0))
+        fixtures_df.sort_values(by=['event'])
+
+        row = [name, round(fixtures_df.tail(5).points.mean(),2), round(fixtures_df.tail(5).team_goals.mean(), 2), round(fixtures_df.points.mean(), 2)]
+        x.add_row(row)
+
+    with open('index.html', 'r') as file :
+        filedata = file.read()
+
+    filedata = filedata.replace('HTML_TEAMTABLE', x.get_html_string(sortby='Goals Per Game [5]', reversesort=True))
+    filedata = filedata.replace('<table>', '<table class="styled-table">')
+
+    with open('index.html', 'w') as file:
+        file.write(filedata)
+
+#=====================================
+
 def printDifficulties():
     all_fixtures_df = get_fixture_data()
     team_df = get_global_info('teams')
@@ -140,6 +177,7 @@ def main():
 #    showBenchedPoints(mini_league_code)
     printDifficulties()
     displayTopPlayers()
+    printTeamForm()
 
 #=====================================
 
