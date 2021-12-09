@@ -85,7 +85,7 @@ def printTeamForm():
     id_to_name = team_df.set_index('id')['name'].to_dict()
 
     x = PrettyTable()
-    names = ["Team", "Points Per Game [5]", "Goals Per Game [5]", "Points Per Game Overall"]
+    names = ["Team", "Points Per Game [5]", "Goals Per Game [5]", "Points Per Game Overall", "Clean Sheets", "Games Team Scored In"]
     x.field_names = names
 
     for id, name in id_to_name.items():
@@ -96,10 +96,12 @@ def printTeamForm():
                 fixtures_df.team_h_score , fixtures_df.team_a_score)
         fixtures_df['opp_goals'] = np.where(fixtures_df.is_home_team == False,
                 fixtures_df.team_h_score , fixtures_df.team_a_score)
+        fixtures_df['clean_sheets'] = np.where(fixtures_df.opp_goals == 0, 1, 0)
+        fixtures_df['did_team_score'] = np.where(fixtures_df.team_goals > 0, 1, 0)
         fixtures_df['points'] = np.where(fixtures_df.team_goals > fixtures_df.opp_goals, 3, np.where(fixtures_df.team_goals == fixtures_df.opp_goals, 1, 0))
         fixtures_df.sort_values(by=['event'])
 
-        row = [name, round(fixtures_df.tail(5).points.mean(),2), round(fixtures_df.tail(5).team_goals.mean(), 2), round(fixtures_df.points.mean(), 2)]
+        row = [name, round(fixtures_df.tail(5).points.mean(),2), round(fixtures_df.tail(5).team_goals.mean(), 2), round(fixtures_df.points.mean(), 2), fixtures_df.clean_sheets.sum(), fixtures_df.did_team_score.sum()]
         x.add_row(row)
 
     with open('index.html', 'r') as file :
