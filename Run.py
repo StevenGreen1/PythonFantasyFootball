@@ -59,8 +59,16 @@ def displayTopPlayers():
             name = element['second_name']
             scores = get_player_history(element['id'])['total_points'].to_list()
             gwk = get_player_history(element['id'])['round'].to_list()
-            moving_avg = movingaverage(scores, 3)
-            axs[row, col].plot(gwk[1:-1], moving_avg, '-', label = name)
+            moving_avg = movingaverage(scores, min(3, len(scores)))
+            print(scores)
+            print(moving_avg)
+            print(gwk)
+            x = []
+            if len(scores) < 3:
+                x = gwk
+            else:
+                x = gwk[1:-1]
+            axs[row, col].plot(x, moving_avg, 'o-', label = name)
 
         axs[row, col].legend(loc="upper left")
         axs[row, col].set_xlabel('Gameweek')
