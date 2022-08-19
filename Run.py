@@ -60,12 +60,12 @@ def displayTopPlayers():
             scores = get_player_history(element['id'])['total_points'].to_list()
             gwk = get_player_history(element['id'])['round'].to_list()
             moving_avg = movingaverage(scores, min(3, len(scores)))
-            print(scores)
-            print(moving_avg)
-            print(gwk)
+#            print(scores)
+#            print(moving_avg)
+#            print(gwk)
             x = []
             if len(scores) < 3:
-                x = gwk
+                x = gwk[-1]
             else:
                 x = gwk[1:-1]
             axs[row, col].plot(x, moving_avg, 'o-', label = name)
