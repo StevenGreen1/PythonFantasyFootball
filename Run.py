@@ -12,6 +12,8 @@ from MiniLeagues import *
 from SixZeroSixCode import *
 
 BASE_URL = 'https://fantasy.premierleague.com/api/'
+RECENT_MATCHES = 5
+MIN_RECOMMENDATION_MINUTES = 270
 
 #=====================================
 # element options for an individual players:
@@ -93,12 +95,15 @@ def printTeamForm():
     id_to_name = team_df.set_index('id')['name'].to_dict()
 
     x = PrettyTable()
-    names = ["Team", "Points Per Game [5]", "Goals Per Game [5]", "Points Per Game Overall", "Clean Sheets", "Games Team Scored In"]
+    names = ["Team", "Points Per Game [5]", "Goals Per Game [5]",
+             "Goals Conceded Per Game [5]", "Goal Difference Per Game [5]",
+             "Clean Sheet Rate [5]", "Scored In Rate [5]",
+             "Points Per Game Overall"]
     x.field_names = names
 
     for id, name in id_to_name.items():
         fixtures_df = all_fixtures_df[((all_fixtures_df.team_h == id) |
-            (all_fixtures_df.team_a == id))]
+            (all_fixtures_df.team_a == id))].copy()
         fixtures_df['is_home_team'] = np.where(fixtures_df.team_h == id, True, False)
         fixtures_df['team_goals'] = np.where(fixtures_df.is_home_team == True,
                 fixtures_df.team_h_score , fixtures_df.team_a_score)
@@ -107,9 +112,16 @@ def printTeamForm():
         fixtures_df['clean_sheets'] = np.where(fixtures_df.opp_goals == 0, 1, 0)
         fixtures_df['did_team_score'] = np.where(fixtures_df.team_goals > 0, 1, 0)
         fixtures_df['points'] = np.where(fixtures_df.team_goals > fixtures_df.opp_goals, 3, np.where(fixtures_df.team_goals == fixtures_df.opp_goals, 1, 0))
-        fixtures_df.sort_values(by=['event'])
+        fixtures_df = fixtures_df.sort_values(by=['event'])
+        recent_fixtures = fixtures_df.tail(RECENT_MATCHES)
 
-        row = [name, round(fixtures_df.tail(5).points.mean(),2), round(fixtures_df.tail(5).team_goals.mean(), 2), round(fixtures_df.points.mean(), 2), fixtures_df.clean_sheets.sum(), fixtures_df.did_team_score.sum()]
+        row = [name, round(recent_fixtures.points.mean(), 2),
+               round(recent_fixtures.team_goals.mean(), 2),
+               round(recent_fixtures.opp_goals.mean(), 2),
+               round((recent_fixtures.team_goals - recent_fixtures.opp_goals).mean(), 2),
+               round(recent_fixtures.clean_sheets.mean() * 100, 1),
+               round(recent_fixtures.did_team_score.mean() * 100, 1),
+               round(fixtures_df.points.mean(), 2)]
         x.add_row(row)
 
     with open('index.html', 'r') as file :
@@ -163,6 +175,58 @@ def printDifficulties():
 
 #=====================================
 
+def printPlayerMetrics():
+    '''Create a shortlist using form, value, underlying attacking data and minutes.'''
+    players_df = get_global_info('elements').copy()
+    teams_df = get_global_info('teams')
+    team_names = teams_df.set_index('id')['name'].to_dict()
+    positions = {1: 'GKP', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+
+    numeric_columns = ['form', 'total_points', 'now_cost', 'minutes', 'starts',
+                       'expected_goals', 'expected_assists']
+    for column in numeric_columns:
+        players_df[column] = pd.to_numeric(players_df[column], errors='coerce').fillna(0)
+
+    players_df['team_name'] = players_df['team'].map(team_names)
+    players_df['position'] = players_df['element_type'].map(positions)
+    players_df['price'] = players_df['now_cost'] / 10
+    players_df['points_per_million'] = np.where(
+        players_df['price'] > 0, players_df['total_points'] / players_df['price'], 0)
+    players_df['xgi_per_90'] = np.where(
+        players_df['minutes'] > 0,
+        (players_df['expected_goals'] + players_df['expected_assists']) * 90 / players_df['minutes'],
+        0)
+    players_df['minutes_per_start'] = np.where(
+        players_df['starts'] > 0, players_df['minutes'] / players_df['starts'], 0)
+
+    # A three-match minutes threshold avoids recommending one-match outliers.
+    shortlist = players_df[players_df['minutes'] >= MIN_RECOMMENDATION_MINUTES]
+    shortlist = shortlist.sort_values(
+        ['element_type', 'form', 'xgi_per_90', 'points_per_million'],
+        ascending=[True, False, False, False]).groupby('element_type', group_keys=False).head(5)
+
+    table = PrettyTable()
+    table.field_names = ['Player', 'Pos', 'Team', 'Price', 'Form', 'Points',
+                         'Pts / £m', 'xGI / 90', 'Starts', 'Mins / Start']
+    for _, player in shortlist.iterrows():
+        table.add_row([
+            player['web_name'], player['position'], player['team_name'],
+            '£{:.1f}'.format(player['price']), round(player['form'], 1),
+            int(player['total_points']), round(player['points_per_million'], 1),
+            round(player['xgi_per_90'], 2), int(player['starts']),
+            round(player['minutes_per_start'], 1)])
+
+    with open('index.html', 'r') as file:
+        filedata = file.read()
+
+    filedata = filedata.replace('HTML_PLAYERTABLE', table.get_html_string())
+    filedata = filedata.replace('<table>', '<table class="styled-table">')
+
+    with open('index.html', 'w') as file:
+        file.write(filedata)
+
+#=====================================
+
 def showBenchedPoints(mini_league_code):
     mini_league_list, names, teams = getMiniLeague(mini_league_code)
 
@@ -187,6 +251,7 @@ def main():
 #    showBenchedPoints(mini_league_code)
     printDifficulties()
     displayTopPlayers()
+    printPlayerMetrics()
     printTeamForm()
 
 #=====================================
