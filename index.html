@@ -1,72 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-    body {
-    height: 400px;
-    background: linear-gradient(to left, #99ccff 0%, #ffffff 100%);
-    }
-    {
-        box-sizing: border-box;
-    }
-    /* Set additional styling options for the columns*/
-    .column {
-    float: left;
-    width: 50%;
-    }
-
-    .row:after {
-    content: "";
-    display: table;
-    clear: both;
-    }
-
-    .styled-table thead tr {
-    background-color: #002398;
-    color: #ffffff;
-    text-align: left;
-    }
-
-    .styled-table {
-    border-collapse: collapse;
-    margin: 25px 0;
-    font-size: 0.9em;
-    font-family: sans-serif;
-    min-width: 400px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .styled-table th,
-    .styled-table td {
-    padding: 12px 15px;
-    }
-
-    .styled-table tbody tr {
-    border-bottom: 1px solid #dddddd;
-    }
-
-    .styled-table tbody tr:nth-of-type(even) {
-    background-color: #f3f3f3;
-    }
-
-    .styled-table tbody tr:last-of-type {
-    border-bottom: 2px solid #002398;
-    }
-
-    img {
-        border-radius: 8px;
-    }
-
-    h1 {text-align: center;}
-    h2 {text-align: center;}
-
+    :root { --ink:#17202a; --muted:#667085; --line:#e7e9ee; --surface:#fff; --canvas:#f8f8f6; --accent:#176b4d; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--canvas); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.5; }
+    .site-header { padding:4.5rem 1.5rem 2.75rem; text-align:center; background:var(--surface); border-bottom:1px solid var(--line); }
+    .eyebrow { margin:0 0 .5rem; color:var(--accent); font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2 { margin:0; letter-spacing:-.03em; } h1 { font-size:clamp(2rem,5vw,3.25rem); } h2 { font-size:1.25rem; font-weight:650; }
+    main { max-width:1200px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    .row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem; }
+    .column { min-width:0; padding:clamp(1.25rem,3vw,2rem); background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+    .column:last-child { grid-column:1 / -1; }
+    .column p { margin:.5rem 0 1.5rem !important; padding:0 !important; color:var(--muted); font-size:.94rem; }
+    img { display:block; width:100% !important; min-width:0 !important; max-width:620px; margin:0 auto; border-radius:8px; }
+    .table-wrap { max-width:100%; overflow-x:auto; overscroll-behavior-x:contain; }
+    .styled-table { width:100%; min-width:520px; border-collapse:collapse; font-size:.88rem; }
+    .styled-table th,.styled-table td { padding:.8rem .9rem; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+    .styled-table thead tr { color:var(--muted); background:#fafafa; font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .styled-table thead th[role="button"] { cursor:pointer; user-select:none; }
+    .styled-table thead th[role="button"]::after { content:"↕"; display:inline-block; margin-left:.45rem; color:#a6adb8; font-size:.85rem; }
+    .styled-table thead th[aria-sort="ascending"]::after { content:"↑"; color:var(--accent); }
+    .styled-table thead th[aria-sort="descending"]::after { content:"↓"; color:var(--accent); }
+    .styled-table tbody tr:last-child td { border-bottom:0; } .styled-table tbody tr:hover { background:#f4f8f5; }
+    @media (max-width:760px) { .site-header { padding:3.25rem 1.25rem 2.25rem; } .row { grid-template-columns:1fr; } .column:last-child { grid-column:auto; } .column { overflow-x:auto; } }
     </style>
-    <title>Fantasy Football Webpage!</title>
+    <title>Fantasy Football Dashboard</title>
   </head>
   <body>
-    <h1>Fantasy Football Info</h1>
-  </body>
-  <div class="row">
+    <header class="site-header">
+      <p class="eyebrow">Premier League insights</p>
+      <h1>Fantasy Football Dashboard</h1>
+    </header>
+    <main>
+    <div class="row">
       <div class="column"> <!-- style="background-color:#FFB695;"-->
         <h2>Player Form</h2>
         <p style="padding: 5px">The three week running average for a players form, for the top 3 players based on overall form in each position.</p>
@@ -76,6 +45,7 @@
         <h2>Fixture Difficulty</h2>
         <p style="padding: 5px">The average difficulty for the next 3, 5 and 10 games and the overall remaining difficulty.</p>
 
+        <div class="table-wrap">
         <table class="styled-table">
     <thead>
         <tr>
@@ -229,11 +199,13 @@
         </tr>
     </tbody>
 </table>
+        </div>
     </div>
     <div class="column"> <!-- style="background-color:#96D1CD;"-->
         <h2>Team Form</h2>
         <p style="padding: 5px">Statistics related to team form.</p>
 
+        <div class="table-wrap">
          <table class="styled-table">
     <thead>
         <tr>
@@ -408,6 +380,39 @@
         </tr>
     </tbody>
 </table>
+        </div>
     </div>
-  </div>
+    </div>
+    </main>
+    <script>
+      document.querySelectorAll('.styled-table').forEach((table) => {
+        const headers = table.querySelectorAll('thead th');
+        headers.forEach((header, columnIndex) => {
+          header.setAttribute('role', 'button');
+          header.setAttribute('tabindex', '0');
+          header.setAttribute('aria-sort', 'none');
+          header.setAttribute('title', 'Sort by ' + header.textContent.trim());
+          const sortTable = () => {
+            const direction = header.getAttribute('aria-sort') === 'ascending' ? -1 : 1;
+            const rows = Array.from(table.tBodies[0].rows);
+            rows.sort((left, right) => {
+              const a = left.cells[columnIndex].textContent.trim();
+              const b = right.cells[columnIndex].textContent.trim();
+              const numeric = /^-?(?:\d+|\d*\.\d+)$/.test(a) && /^-?(?:\d+|\d*\.\d+)$/.test(b);
+              const aNumber = Number(a);
+              const bNumber = Number(b);
+              return direction * (numeric ? aNumber - bNumber : a.localeCompare(b, undefined, { numeric: true }));
+            });
+            rows.forEach((row) => table.tBodies[0].appendChild(row));
+            headers.forEach((item) => item.setAttribute('aria-sort', 'none'));
+            header.setAttribute('aria-sort', direction === 1 ? 'ascending' : 'descending');
+          };
+          header.addEventListener('click', sortTable);
+          header.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); sortTable(); }
+          });
+        });
+      });
+    </script>
+  </body>
 </html>
